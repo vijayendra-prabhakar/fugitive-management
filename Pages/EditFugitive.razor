@@ -1,0 +1,64 @@
+﻿@page "/editfugitive/{Id:int}"
+@using FugitiveManagement.Services
+@using Microsoft.AspNetCore.Components
+@using FugitiveManagement.Models
+@inject FugitiveService DataService
+@inject CrimeService CrimeService
+@inject NavigationManager NavigationManager
+
+<h3>Edit Fugitive</h3>
+
+@if (fugitive == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="fugitive" OnValidSubmit="UpdateFugitive">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <InputText id="name" class="form-control" @bind-Value="fugitive.Name" />
+        </div>
+        <div class="form-group">
+            <label for="address">Address:</label>
+            <InputText id="address" class="form-control" @bind-Value="fugitive.Address" />
+        </div>
+        <div class="form-group">
+            <label for="dob">Date of Birth:</label>
+            <InputDate id="dob" class="form-control" @bind-Value="fugitive.Dob" />
+        </div>
+        <div class="form-group">
+            <label for="crime">Crime:</label>
+            <InputSelect id="crime" class="form-control" @bind-Value="fugitive.CrimeId">
+                <option value="">-- Select --</option>
+                @foreach (var crime in crimes)
+                {
+                    <option value="@crime.Id">@crime.CrimeName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Fugitive</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Fugitive fugitive;
+    private List<Crime> crimes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        fugitive = await DataService.GetFugitiveByIdAsync(Id);
+        crimes = await CrimeService.GetCrimesAsync();
+    }
+
+    private async Task UpdateFugitive()
+    {
+        await DataService.UpdateFugitiveAsync(fugitive);
+        NavigationManager.NavigateTo("/manageentities");
+    }
+}

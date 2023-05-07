@@ -1,0 +1,108 @@
+﻿@using FugitiveManagement.Services
+@using Microsoft.AspNetCore.Components
+@using FugitiveManagement.Models
+@inject FugitiveService FugitiveService
+@inject CrimeService CrimeService
+
+<h3>Fugitives</h3>
+
+<button class="btn btn-primary" @onclick="() => showForm = !showForm">Add Fugitive</button>
+
+@if (showForm)
+{
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <EditForm Model="newFugitive" OnValidSubmit="AddFugitive">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <InputText id="name" class="form-control" @bind-Value="newFugitive.Name" />
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <InputText id="address" class="form-control" @bind-Value="newFugitive.Address" />
+                </div>
+                <div class="form-group">
+                    <label for="dob">Date of Birth:</label>
+                    <InputDate id="dob" class="form-control" @bind-Value="newFugitive.Dob" />
+                </div>
+                <div class="form-group">
+                    <label for="crime">Crime:</label>
+                    <InputSelect id="crime" class="form-control" @bind-Value="newFugitive.CrimeId">
+                        <option value="">-- Select --</option>
+                        @foreach (var crime in crimes)
+                        {
+                            <option value="@crime.Id">@crime.CrimeName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Fugitive</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@if (fugitives == null || crimes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Date of Birth</th>
+            <th>Crime</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var fugitive in fugitives)
+        {
+            <tr>
+                <td>@fugitive.Name</td>
+                <td>@fugitive.Address</td>
+                <td>@fugitive.Dob.ToShortDateString()</td>
+                <td>@fugitive.Crime.CrimeName</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Fugitive> fugitives;
+    private List<Crime> crimes;
+    private bool showForm = false;
+    private Fugitive newFugitive = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        fugitives = await FugitiveService.GetFugitivesAsync();
+        crimes = await CrimeService.GetCrimesAsync();
+    }
+
+    private async Task AddFugitive()
+        {
+            await FugitiveService.AddFugitiveAsync(newFugitive);
+            newFugitive = new Fugitive();
+            showForm = false;
+            await LoadData();
+        }
+
+        private async Task DeleteFugitive(Fugitive fugitive)
+        {
+            await FugitiveService.DeleteFugitiveAsync(fugitive);
+            await LoadData();
+        }
+    }
+
