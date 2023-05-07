@@ -1,0 +1,56 @@
+﻿@page "/editprosecutor/{Id:int}"
+@using FugitiveManagement.Services
+@using Microsoft.AspNetCore.Components
+@using FugitiveManagement.Models
+@inject ProsecutorService DataService
+@inject CrimeService CrimeService
+@inject NavigationManager NavigationManager
+
+<h3>Edit Prosecutor</h3>
+
+@if (prosecutor == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="prosecutor" OnValidSubmit="UpdateProsecutor">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <InputText id="name" class="form-control" @bind-Value="prosecutor.Name" />
+        </div>
+        <div class="form-group">
+            <label for="crime">Crime:</label>
+            <InputSelect id="crime" class="form-control" @bind-Value="prosecutor.CrimeId">
+                <option value="">-- Select --</option>
+                @foreach (var crime in crimes)
+                {
+                    <option value="@crime.Id">@crime.CrimeName</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Prosecutor</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Prosecutor prosecutor;
+    private List<Crime> crimes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        prosecutor = await DataService.GetProsecutorByIdAsync(Id);
+        crimes = await CrimeService.GetCrimesAsync();
+    }
+
+    private async Task UpdateProsecutor()
+    {
+        await DataService.UpdateProsecutorAsync(prosecutor);
+        NavigationManager.NavigateTo("/manageentities");
+    }
+}

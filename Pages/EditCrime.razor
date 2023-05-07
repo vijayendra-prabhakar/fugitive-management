@@ -1,0 +1,44 @@
+﻿@page "/editcrime/{Id:int}"
+@using FugitiveManagement.Services
+@using Microsoft.AspNetCore.Components
+@using FugitiveManagement.Models
+@inject ProsecutorService DataService
+@inject CrimeService CrimeService
+@inject NavigationManager NavigationManager
+
+<h3>Edit Crime</h3>
+
+@if (crime == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="crime" OnValidSubmit="UpdateCrime">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="crimeName">Crime Name:</label>
+            <InputText id="crimeName" class="form-control" @bind-Value="crime.CrimeName" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Crime</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Crime crime;
+
+    protected override async Task OnInitializedAsync()
+    {
+        crime = await CrimeService.GetCrimeByIdAsync(Id);
+    }
+
+    private async Task UpdateCrime()
+    {
+        await CrimeService.UpdateCrimeAsync(crime);
+        NavigationManager.NavigateTo("/manageentities");
+    }
+}
