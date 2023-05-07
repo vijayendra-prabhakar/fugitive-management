@@ -1,0 +1,99 @@
+﻿@using FugitiveManagement.Services
+@using Microsoft.AspNetCore.Components
+@using FugitiveManagement.Models
+@inject ProsecutorService DataService
+@inject CrimeService CrimeService
+
+<h3>Prosecutors</h3>
+
+<button class="btn btn-primary" @onclick="() => showForm = !showForm">Add Prosecutor</button>
+
+@if (showForm)
+{
+    <div class="row mt-4">
+    <div class="col-md-6">
+    <EditForm Model="newProsecutor" OnValidSubmit="AddProsecutor">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <InputText id="name" class="form-control" @bind-Value="newProsecutor.Name" />
+    </div>
+    <div class="form-group">
+        <label for="crime">Crime:</label>
+        <InputSelect id="crime" class="form-control" @bind-Value="newProsecutor.CrimeId">
+            <option value="">-- Select --</option>
+            @foreach (var crime in crimes)
+            {
+                <option value="@crime.Id">@crime.CrimeName</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Prosecutor</button>
+    </EditForm>
+    </div>
+    </div>
+}
+
+@if (prosecutors == null || crimes == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Crime</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var prosecutor in prosecutors)
+        {
+            <tr>
+                <td>@prosecutor.Name</td>
+                <td>@prosecutor.Crime.CrimeName</td>
+                <td>
+                    <a href="/editprosecutor/@prosecutor.Id">Edit</a>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteProsecutor(prosecutor)">Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Prosecutor> prosecutors;
+    private List<Crime> crimes;
+    private bool showForm = false;
+    private Prosecutor newProsecutor = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        prosecutors = await DataService.GetProsecutorsAsync();
+        crimes = await CrimeService.GetCrimesAsync();
+    }
+
+    private async Task AddProsecutor()
+    {
+        await DataService.AddProsecutorAsync(newProsecutor);
+        newProsecutor = new Prosecutor();
+        showForm = false;
+        await LoadData();
+    }
+
+    private async Task DeleteProsecutor(Prosecutor prosecutor)
+    {
+        await DataService.DeleteProsecutorAsync(prosecutor);
+        await LoadData();
+    }
+}
